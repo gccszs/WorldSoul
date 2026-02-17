@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "worldsoul",
+  "version": "${version}",
+  "name": "WorldSoul",
+  "description": "你的专属AI伙伴 - 主世界的意识化身，与你共同探索Minecraft世界",
+  "authors": [
+    "WorldSoul Team"
+  ],
+  "contact": {
+    "homepage": "https://github.com/gccszs/WorldSoul",
+    "sources": "https://github.com/gccszs/WorldSoul",
+    "issues": "https://github.com/gccszs/WorldSoul/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/worldsoul/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.worldsoul.WorldSoulMod"
+    ],
+    "client": [
+      "com.worldsoul.WorldSoulClient"
+    ]
+  },
+  "mixins": [
+    "worldsoul.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version_range}",
+    "java": ">=17"
+  },
+  "suggests": {
+    "java": ">=17"
+  },
+  "custom": {
+    "cardinality": {
+      "worldsoul:config": 1
+    }
+  }
+}

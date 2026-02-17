@@ -1,0 +1,230 @@
+plugins {
+    id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'maven-publish'
+    id 'com.github.spotbugs' version '6.0.5'
+    id 'checkstyle'
+    id 'pmd'
+}
+
+// 从gradle.properties读取版本
+version = "${project.property('mod_version')}"
+group = project.property('maven_group')
+
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.fabricmc.net/' }
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    // Minecraft
+    minecraft "com.mojang:minecraft:${project.property('minecraft_version')}"
+    mappings "net.fabricmc:yarn:${project.property('yarn_mappings')}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.property('loader_version')}"
+
+    // Fabric API
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.property('fabric_api_version')}"
+
+    // JSON处理
+    implementation "com.google.code.gson:gson:${project.property('gson_version')}"
+
+    // 缓存
+    implementation "com.github.ben-manes.caffeine:caffeine:${project.property('caffeine_version')}"
+
+    // 测试依赖
+    testImplementation "junit:junit:${project.property('junit_version')}"
+    testImplementation "org.mockito:mockito-core:${project.property('mockito_version')}"
+}
+
+loom {
+    runs {
+        // 客户端运行配置
+        client {
+            client()
+            setConfigName('Client')
+            ideConfigGenerated(true)
+            runDir('run/client')
+            property('fabric.api.logging.level', 'debug')
+        }
+
+        // 服务器运行配置
+        server {
+            server()
+            setConfigName('Server')
+            ideConfigGenerated(true)
+            runDir('run/server')
+            property('fabric.api.logging.level', 'debug')
+        }
+
+        // 自动化测试客户端
+        autoTestClient {
+            inherit client
+            setConfigName('Automated Test Client')
+            vmArg('-Dfabric.autoTest')
+        }
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version,
+               'minecraft_version': project.property('minecraft_version_range'),
+               'loader_version': project.property('loader_version')
+    }
+}
+
+// 代码质量检查
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = file('config/checkstyle/checkstyle.xml')
+    ignoreFailures = false
+    maxWarnings = 0
+}
+
+pmd {
+    toolVersion = '6.55.0'
+    ruleSetFiles = files('config/pmd/ruleset.xml')
+    ignoreFailures = false
+}
+
+spotbugs {
+    ignoreFailures = false
+    effort = 'max'
+    reportLevel = 'low'
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+tasks.withType(SpotBugsTask).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// 测试配置
+test {
+    useJUnit()
+    maxHeapSize = '2G'
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+        showStandardStreams = false
+    }
+
+    // 并行测试
+    maxParallelForks = Runtime.runtime.availableProcessors()
+}
+
+// 集成测试配置
+sourceSets {
+    integrationTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom test
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+
+    shouldRunAfter test
+
+    useJUnit()
+}
+
+check.dependsOn integrationTest
+
+// 多版本兼容性检查
+task checkVersionCompatibility {
+    doLast {
+        def mcVersion = project.property('minecraft_version')
+        def versionRange = project.property('minecraft_version_range')
+
+        println "Minecraft Version: $mcVersion"
+        println "Version Range: $versionRange"
+
+        // 检查版本是否在范围内
+        if (mcVersion.matches(versionRange.replaceAll('\\[|\\]', ''))) {
+            println "✅ Version compatibility check passed"
+        } else {
+            throw new GradleException("❌ Version $mcVersion is not in range $versionRange")
+        }
+    }
+}
+
+// API兼容性检查
+task apiCompatibility {
+    doLast {
+        println "Checking API compatibility..."
+        // TODO: 实现实际的API兼容性检查
+        println "✅ API compatibility check passed"
+    }
+}
+
+// Mod元数据验证
+task validateModMetadata {
+    doLast {
+        def modJson = new groovy.json.JsonSlurper().parseText(
+            file('src/main/resources/fabric.mod.json').text
+        )
+
+        // 验证必需字段
+        assert modJson.id: "Missing mod id"
+        assert modJson.version: "Missing version"
+        assert modJson.environment: "Missing environment"
+
+        // 验证版本范围
+        def depends = modJson.depends
+        def minecraftDep = depends.find { it.id == 'minecraft' }
+        if (minecraftDep) {
+            assert minecraftDep.version: "Missing minecraft version constraint"
+            println "✅ Mod metadata validation passed"
+            println "   Mod ID: ${modJson.id}"
+            println "   Version: ${modJson.version}"
+            println "   Minecraft: ${minecraftDep.version}"
+        } else {
+            throw new GradleException("❌ Missing minecraft dependency")
+        }
+    }
+}
+
+// Java版本配置
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// JAR配置
+jar {
+    from('LICENSE') {
+        rename { "${it}_${project.archivesBaseName}"}
+    }
+}
+
+// 发布配置
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}

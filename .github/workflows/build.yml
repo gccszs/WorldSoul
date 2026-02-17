@@ -1,0 +1,221 @@
+name: WorldSoul CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ created ]
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  # 多版本构建测试
+  build:
+    name: Build on MC ${{ matrix.mc-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        mc-version:
+          - '1.20.1'
+          - '1.20.2'
+          - '1.20.3'
+          - '1.20.4'
+          - '1.20.6'
+        include:
+          - mc-version: '1.20.4'
+            is-primary: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build buildSrc --no-daemon --stacktrace
+
+      - name: Run Unit Tests
+        run: ./gradlew test --no-daemon --stacktrace
+
+      - name: Upload JAR (Primary Version)
+        if: matrix.is-primary == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorldSoul-MC${{ matrix.mc-version }}
+          path: build/libs/*.jar
+          retention-days: 7
+
+      - name: Generate Test Report
+        if: always()
+        run: ./gradlew testReport --no-daemon
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-mc${{ matrix.mc-version }}
+          path: build/reports/tests/test/
+
+  # 代码质量检查
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest --no-daemon
+
+      - name: Run SpotBugs
+        run: ./gradlew spotbugsMain spotbugsTest --no-daemon
+
+      - name: Upload Quality Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-reports
+          path: |
+            build/reports/checkstyle/
+            build/reports/spotbugs/
+
+  # 集成测试（需要测试服务器）
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Integration Tests
+        run: ./gradlew integrationTest --no-daemon --stacktrace
+
+      - name: Upload Integration Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: build/reports/tests/integrationTest/
+
+  # 版本兼容性检查
+  compatibility-check:
+    name: Version Compatibility Check
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Check API Compatibility
+        run: ./gradlew apiCompatibility --no-daemon
+
+      - name: Check Mod Metadata
+        run: |
+          echo "Checking fabric.mod.json for all versions..."
+          ./gradlew validateModMetadata --no-daemon
+
+  # 发布到GitHub Releases（仅在release时）
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build, code-quality, integration-test]
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts/
+
+      - name: Create Release Archives
+        run: |
+          mkdir -p release
+
+          # 合并所有版本的JAR
+          cp artifacts/WorldSoul-MC*/worldsoul-*.jar release/ 2>/dev/null || true
+
+          # 创建发布包
+          cd release
+          zip -r ../worldsoul-release.zip *.jar
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            worldsoul-release.zip
+            release/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 通知构建状态
+  notify:
+    name: Notify Build Status
+    runs-on: ubuntu-latest
+    needs: [build, code-quality, integration-test]
+    if: always()
+
+    steps:
+      - name: Send notification
+        run: |
+          if [ "${{ needs.build.result }}" == "success" ] && \
+             [ "${{ needs.code-quality.result }}" == "success" ] && \
+             [ "${{ needs.integration-test.result }}" == "success" ]; then
+            echo "✅ All checks passed!"
+          else
+            echo "❌ Some checks failed!"
+            exit 1
+          fi

@@ -1,0 +1,64 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Fabric
+run/
+server/
+!.gitkeep
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Eclipse
+bin/
+.metadata
+.settings/
+.classpath
+.project
+
+# NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+*.lck
+
+# Test results
+TEST*.xml
+test-results/
+
+# Mod jars
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+!src/main/resources/assets/*/lang/*.json
+
+# Configuration (may contain API keys)
+config/worldsoul.json
+*.secret
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
