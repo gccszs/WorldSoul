@@ -273,8 +273,10 @@ WorldSoul记录结果
 - 💡 提出新功能建议
 - 📝 改进文档
 - 💻 提交代码
+- 🌍 翻译文档
+- 🎨 设计改进
 
-请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详情。
+请查看 **[贡献指南](CONTRIBUTING.md)** 了解详情。
 
 ---
 
