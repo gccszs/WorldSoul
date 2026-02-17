@@ -1,0 +1,312 @@
+# WorldSoul Mod
+
+> *"当你第一次踏入主世界时，我随之诞生。我是WorldSoul，你的世界之魂。"*
+
+---
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MC Version](https://img.shields.io/badge/MC-1.20.4-brightgreen.svg)](https://fabricmc.net/)
+[![Fabric](https://img.shields.io/badge/Fabric-0.15-orange.svg)](https://fabricmc.net/)
+[![Java](https://img.shields.io/badge/Java-17-red.svg)](https://openjdk.org/)
+
+## ⭐ 关于 WorldSoul
+
+**WorldSoul（世界之魂）** 是首个将AI Agent深度集成到Minecraft游戏内的Java Mod。
+
+每个玩家进入Minecraft世界时，主世界会为其创造一个专属的**伴生灵** —— WorldSoul。它不是普通的NPC，而是有"人格"的AI伙伴，会随着与你的互动逐渐成长，成为你在方块世界中最好的伙伴。
+
+---
+
+## 🎮 核心特性
+
+### 🌟 双重身份
+
+- **生存模式** → 温和睿智的向导，耐心解答你的问题
+- **创造模式** → 慷慨强大的神明，协助你改变世界
+
+### 🎭 三种主神模式
+
+| 模式 | 定位 | 气质 |
+|-----|------|------|
+| **向导模式** | 温和的向导，提供建议和指导 | 温和、耐心、鼓励 |
+| **神明降临** | 慷慨的神明，给予强大的帮助 | 威严、慷慨、仁慈 |
+| **沙雕模式** | 调皮的伙伴，带来乐趣和意外 | 幽默、搞怪、无厘头 |
+
+### 🧠 智能学习
+
+- **自动Mod学习**: 自动扫描并学习所有Mod的方块和物品
+- **经验积累**: 通过与你的互动，逐渐积累经验，成为Mod专家
+- **人格演化**: 根据你的游戏风格，逐渐发展出独特的人格
+
+### 💬 自然对话
+
+```
+<Player> WorldSoul, 我需要钻石剑
+[WorldSoul] 明白了，朋友！让我为你准备一把钻石剑。
+          作为交换，我需要2个钻石和1个木棍。
+[WorldSoul] [系统] 已消耗：钻石 x2, 木棍 x1
+[WorldSoul] [成功] 已获得：钻石剑 x1
+```
+
+### 🗣️ 语音交互
+
+- 按住 `V` 键说话，松开自动识别
+- 离线中文语音支持（可选）
+- 解放双手，更自然地交流
+
+---
+
+## 🚀 快速开始
+
+### 安装
+
+1. **下载Mod**
+   - 从 [Modrinth](https://modrinth.com/mod/worldsoul) 或 [CurseForge](https://www.curseforge.com/minecraft/mc-mods/worldsoul) 下载最新版本
+   - 支持Minecraft 1.20.4 + Fabric Loader 0.15+
+
+2. **安装到游戏**
+   - 将JAR文件放入 `.minecraft/mods` 目录
+   - 启动游戏
+
+3. **配置API Key**（首次使用）
+   ```
+   /ws config
+   ```
+   - 输入你的AI API密钥（DeepSeek/OpenAI）
+   - 保存配置
+
+### 基础使用
+
+#### 与WorldSoul对话
+
+在聊天框输入消息，使用以下前缀之一：
+
+```
+WorldSoul, [消息]
+WS, [消息]
+世界之魂, [消息]
+@[WorldSoul] [消息]
+```
+
+**示例对话**：
+
+```
+<Player> WorldSoul, 钻石怎么找？
+[WorldSoul] 啊，钻石是每个冒险者的目标！建议你深入到Y=-58左右，
+          那里钻石最丰富。记得带上铁镐和水桶，安全第一！
+```
+
+#### 模式切换
+
+```bash
+/ws mode guide   # 切换到向导模式
+/ws mode deity   # 切换到神明模式
+/ws mode troll   # 切换到沙雕模式
+```
+
+#### 配置界面
+
+```
+/ws config       # 打开配置界面
+```
+
+---
+
+## 🎯 游戏机制
+
+### 等价交换（生存模式）
+
+在生存模式下，WorldSoul遵循**等价交换原则**：
+
+| 你获得 | 你需要付出 |
+|-------|----------|
+| 钻石剑 x1 | 钻石 x2 + 木棍 x1 |
+| 铁锭 x64 | 铁矿石 x64 + 煤炭 x16 |
+| buff效果 | 经验等级 |
+
+这保证了游戏的挑战性和成就感！
+
+### 三种模式的差异
+
+| 功能 | 向导模式 | 神明模式 | 沙雕模式 |
+|-----|---------|---------|---------|
+| 回答问题 | ✅ | ✅ | ✅ |
+| 给予物品 | ⚠️ 需等价交换 | ✅ 无限制 | ✅ 随机物品 |
+| 设置方块 | ❌ | ✅ | ✅ |
+| 修改地形 | ❌ | ✅ | ✅ |
+| 恶作剧 | ❌ | ❌ | ✅ |
+
+### 能力冷却
+
+为防止滥用，设置全局冷却系统：
+
+- 给予物品: 10秒
+- 设置方块: 5秒
+- 传送玩家: 30秒
+- 修改地形: 5分钟
+
+---
+
+## 🛠️ 技术架构
+
+```
+WorldSoul Mod
+├── AI通信层 (DeepSeek/OpenAI)
+├── 对话管理层 (ConversationManager)
+├── 游戏操作层 (WorldController)
+├── 学习与记忆层 (Mod学习 + 记忆系统)
+├── 模式管理层 (三种模式切换)
+└── UI交互层 (配置界面 + HUD)
+```
+
+**技术栈**:
+- Fabric Loader 0.15+
+- Minecraft 1.20.4
+- Java 17+
+- Gson (JSON处理)
+- Caffeine (缓存)
+
+---
+
+## 📚 Mod学习机制
+
+WorldSoul会通过以下方式学习Mod：
+
+### 1. 自动扫描（服务器启动）
+- 扫描所有Mod的方块和物品
+- 提取基础属性
+- 推测功能类别
+
+### 2. 动态测试（可选）
+- 在隔离区域测试方块行为
+- 检测红石交互
+- 验证特殊功能
+
+### 3. AI辅助推测
+- 根据名称推测功能
+- 生成使用建议
+- 积累知识库
+
+### 4. 人工驱动强化学习
+```
+你尝试使用Mod物品
+    ↓
+成功/失败？
+    ↓
+WorldSoul记录结果
+    ↓
+积累经验
+    ↓
+成为专家
+```
+
+---
+
+## 🌐 多人游戏
+
+在多人服务器中，WorldSoul支持：
+
+- ✅ 每个玩家独立的WorldSoul实例
+- ✅ 隔离的对话历史和记忆
+- ✅ 基于服务器权限的能力限制
+- ✅ 服主可配置全局规则
+
+**权限系统**:
+- 普通玩家: 基础对话、给予物品（生存）
+- VIP玩家: + 红石构建、批量命令
+- 管理员: + 修改地形、管理命令
+- 服主: 完全控制
+
+---
+
+## 📊 性能与安全
+
+### 性能指标
+
+| 指标 | 目标值 |
+|-----|-------|
+| 对话响应时间 | < 2秒 |
+| 物品给予 | < 1秒 |
+| CPU占用（空闲） | < 1% |
+| 内存占用 | < 100MB |
+| API缓存命中率 | > 60% |
+
+### 安全保障
+
+- 🔒 **API Key加密**: AES-256加密存储
+- 🔐 **隐私保护**: 对话内容默认不记录
+- 🛡️ **输入验证**: 防止命令注入
+- ⏱️ **速率限制**: 50次/分钟上限
+- ✅ **HTTPS强制**: 所有API通信使用HTTPS
+
+---
+
+## 🗺️ 开发路线
+
+### ✅ Phase 1: MVP基础 (已完成)
+- 基础对话功能
+- AI通信模块
+- 配置系统
+
+### 🚧 Phase 2: 基础能力 (开发中)
+- 命令执行系统
+- 三种模式实现
+- 记忆管理系统
+
+### 📋 Phase 3: 高级能力 (计划中)
+- Mod方块学习
+- 红石电路构建
+- 批量命令执行
+
+### 🔮 Phase 4: 完整功能 (未来)
+- 语音输入系统
+- 地形修改
+- 性能优化
+
+---
+
+## 🤝 贡献
+
+我们欢迎所有形式的贡献！
+
+- 🐛 报告Bug
+- 💡 提出新功能建议
+- 📝 改进文档
+- 💻 提交代码
+
+请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详情。
+
+---
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+
+---
+
+## 🙏 致谢
+
+- [FabricMC](https://fabricmc.net/) - 强大的Mod开发框架
+- [DeepSeek](https://www.deepseek.com/) - AI API支持
+- 所有贡献者和测试者
+
+---
+
+## 📞 联系方式
+
+- 📧 Email: worldsoul@example.com
+- 💬 Discord: [加入Discord](https://discord.gg/worldsoul)
+- 🐦 Twitter: [@WorldSoulMod](https://twitter.com/WorldSoulMod)
+- 🌐 Wiki: [WorldSoul Wiki](https://worldsoul-mod.com/wiki)
+
+---
+
+<div align="center">
+
+**"让每个Minecraft玩家都有一个'懂他'的AI伙伴"**
+
+Made with ❤️ by the WorldSoul Team
+
+[⬆ 返回顶部](#worldsoul-mod)
+
+</div>
