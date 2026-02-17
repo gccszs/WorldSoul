@@ -284,23 +284,6 @@ WorldSoul记录结果
 
 ---
 
-## 🙏 致谢
-
-- [FabricMC](https://fabricmc.net/) - 强大的Mod开发框架
-- [DeepSeek](https://www.deepseek.com/) - AI API支持
-- 所有贡献者和测试者
-
----
-
-## 📞 联系方式
-
-- 📧 Email: worldsoul@example.com
-- 💬 Discord: [加入Discord](https://discord.gg/worldsoul)
-- 🐦 Twitter: [@WorldSoulMod](https://twitter.com/WorldSoulMod)
-- 🌐 Wiki: [WorldSoul Wiki](https://worldsoul-mod.com/wiki)
-
----
-
 <div align="center">
 
 **"让每个Minecraft玩家都有一个'懂他'的AI伙伴"**
