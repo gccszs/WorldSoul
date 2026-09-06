@@ -1,0 +1,149 @@
+/**
+ * Shared Fabric mod conventions for a single Minecraft version project.
+ *
+ * Expected project extras before apply:
+ *   ext.mcProps = Properties loaded from versions/<ver>.properties
+ */
+apply plugin: 'fabric-loom'
+
+base {
+    archivesName = mcProps['archives_base_name']
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${mcProps['minecraft_version']}"
+    mappings "net.fabricmc:yarn:${mcProps['yarn_mappings']}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${mcProps['loader_version']}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${mcProps['fabric_api_version']}"
+
+    implementation project(':mod-common')
+    include project(':mod-common')
+    implementation project(':agent-core')
+    include project(':agent-core')
+    implementation "com.google.code.gson:gson:${rootProject.property('gson_version')}"
+    include "com.google.code.gson:gson:${rootProject.property('gson_version')}"
+
+    testImplementation "junit:junit:${rootProject.property('junit_version')}"
+    testImplementation "org.mockito:mockito-core:${rootProject.property('mockito_version')}"
+}
+
+loom {
+    runs {
+        client {
+            client()
+            setConfigName("Client-${mcProps['minecraft_version']}")
+            ideConfigGenerated(true)
+            runDir("run/client-${mcProps['minecraft_version']}")
+            property('fabric.api.logging.level', 'debug')
+        }
+        server {
+            server()
+            setConfigName("Server-${mcProps['minecraft_version']}")
+            ideConfigGenerated(true)
+            runDir("run/server-${mcProps['minecraft_version']}")
+            property('fabric.api.logging.level', 'debug')
+        }
+    }
+}
+
+def gameJavaLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+}
+
+tasks.configureEach { task ->
+    if (task instanceof JavaExec && task.name.startsWith('run')) {
+        task.javaLauncher = gameJavaLauncher
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnit()
+    maxHeapSize = '1G'
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'minecraft_version_range', mcProps['minecraft_version_range']
+    inputs.property 'loader_version', mcProps['loader_version']
+
+    filesMatching('fabric.mod.json') {
+        expand version: project.version,
+                minecraft_version_range: mcProps['minecraft_version_range'],
+                loader_version: mcProps['loader_version']
+    }
+}
+
+jar {
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+remapJar {
+    addNestedDependencies = true
+}
+
+tasks.register('verifyGradleJvm') {
+    group = 'verification'
+    doLast {
+        int major = JavaVersion.current().majorVersion.toInteger()
+        if (major > 21) {
+            logger.warn("Gradle JVM is Java {}. Ensure fabric-loom >= 1.10.", major)
+        }
+    }
+}
+
+tasks.named('remapJar') {
+    dependsOn tasks.named('verifyGradleJvm')
+    doLast {
+        def output = archiveFile.get().asFile
+        if (output.length() < 1024) {
+            throw new GradleException(
+                    "remapJar produced an invalid jar (" + output.length() + " bytes).\n"
+                            + "Fix: use fabric-loom 1.10.5+ or JDK 21 for game runs.")
+        }
+    }
+}
+
+tasks.register('copyReleaseModJar', Copy) {
+    group = 'build'
+    description = "Copies remapped jar to build/release/worldsoul-${mcProps['minecraft_version']}.jar"
+    dependsOn remapJar
+    from(remapJar)
+    into layout.buildDirectory.dir('release')
+    rename { "worldsoul-${mcProps['minecraft_version']}.jar" }
+}
+
+tasks.named('build') {
+    dependsOn 'copyReleaseModJar'
+}
+
+tasks.register('validateModMetadata') {
+    group = 'verification'
+    doLast {
+        def modJsonFile = file('src/main/resources/fabric.mod.json')
+        def text = modJsonFile.getText('UTF-8')
+                .replace('${version}', project.version as String)
+                .replace('${minecraft_version_range}', mcProps['minecraft_version_range'] as String)
+                .replace('${loader_version}', mcProps['loader_version'] as String)
+        def modJson = new groovy.json.JsonSlurper().parseText(text)
+        assert modJson.id: 'Missing mod id'
+        assert modJson.depends?.minecraft: 'Missing minecraft dependency'
+        println "Mod metadata OK: ${modJson.id}@${modJson.version} minecraft=${modJson.depends.minecraft}"
+    }
+}

@@ -7,6 +7,7 @@ build/
 
 # Fabric
 run/
+**/run/
 server/
 !.gitkeep
 
@@ -57,6 +58,9 @@ test-results/
 # Configuration (may contain API keys)
 config/worldsoul.json
 *.secret
+
+# Local friend-share pack (jars + host-specific URLs)
+share-for-friends/
 
 # OS
 Thumbs.db
