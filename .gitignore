@@ -5,10 +5,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# Fabric
+# Fabric Loom run dirs (do not use bare "server/" — it hides packages like
+# worldsoul-harness/packages/sdk/server)
 run/
 **/run/
-server/
+/server/
 !.gitkeep
 
 # IDE
