@@ -1,0 +1,25 @@
+# Version-independent WorldSoul HTTP surface over dsh-base.
+
+- insert:
+    - id: worldsoul-webserver
+      name: '@deepseek-ai/dsh-host-webserver'
+      config:
+        host: '127.0.0.1'
+        port: !!js Number(process.env.WORLDSOUL_PORT ?? 8787)
+        compression: gzip
+        compressionLevel: 1
+        compressionThresholdBytes: 1024
+
+    - id: worldsoul-gateway
+      name: '@deepseek-ai/dsh-worldsoul-gateway'
+      config:
+        pathPrefix: /worldsoul
+        maxBodyBytes: 1048576
+        defaultTokenLimit: 1000000
+        warningRatio: 0.8
+        maxCommandChars: 512
+        maxAudioBytes: 1048576
+        speechEndpoint: !!js process.env.WORLDSOUL_SPEECH_URL ?? 'http://127.0.0.1:9001/v1/audio/transcriptions'
+        speechModel: !!js process.env.WORLDSOUL_SPEECH_MODEL ?? 'FireRedASR-AED-L'
+        speechCredentialEnv: !!js String(process.env.WORLDSOUL_SPEECH_CREDENTIAL_ENV ?? '')
+        speechTimeoutMs: 60000

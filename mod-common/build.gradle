@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+}
+
+base {
+    archivesName = 'worldsoul-mod-common'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+}
+
+dependencies {
+    api project(':agent-core')
+    api "com.google.code.gson:gson:${rootProject.property('gson_version')}"
+    compileOnly 'org.slf4j:slf4j-api:2.0.9'
+
+    testImplementation "junit:junit:${rootProject.property('junit_version')}"
+    testImplementation 'org.slf4j:slf4j-api:2.0.9'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}

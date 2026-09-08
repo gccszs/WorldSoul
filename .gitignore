@@ -5,9 +5,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# Fabric
+# Fabric Loom run dirs (do not use bare "server/" — it hides packages like
+# worldsoul-harness/packages/sdk/server)
 run/
-server/
+**/run/
+/server/
 !.gitkeep
 
 # IDE
@@ -57,6 +59,9 @@ test-results/
 # Configuration (may contain API keys)
 config/worldsoul.json
 *.secret
+
+# Local friend-share pack (jars + host-specific URLs)
+share-for-friends/
 
 # OS
 Thumbs.db

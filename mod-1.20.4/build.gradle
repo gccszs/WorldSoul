@@ -1,0 +1,5 @@
+def mcProps = new Properties()
+file("${rootDir}/versions/1.20.4.properties").withInputStream { mcProps.load(it) }
+ext.mcProps = mcProps
+
+apply from: "${rootDir}/gradle/fabric-mod.gradle"

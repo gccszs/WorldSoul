@@ -5,7 +5,7 @@
 ---
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![MC Version](https://img.shields.io/badge/MC-1.20.4-brightgreen.svg)](https://fabricmc.net/)
+[![MC Version](https://img.shields.io/badge/MC-1.20.1-brightgreen.svg)](https://fabricmc.net/)
 [![Fabric](https://img.shields.io/badge/Fabric-0.15-orange.svg)](https://fabricmc.net/)
 [![Java](https://img.shields.io/badge/Java-17-red.svg)](https://openjdk.org/)
 
@@ -60,20 +60,16 @@
 
 ### 安装
 
-1. **下载Mod**
-   - 从 [Modrinth](https://modrinth.com/mod/worldsoul) 或 [CurseForge](https://www.curseforge.com/minecraft/mc-mods/worldsoul) 下载最新版本
-   - 支持Minecraft 1.20.4 + Fabric Loader 0.15+
+1. **构建 Mod**
+   - 当前主验证版本为 Minecraft 1.20.1，同时维护 1.20.4 适配
 
 2. **安装到游戏**
    - 将JAR文件放入 `.minecraft/mods` 目录
    - 启动游戏
 
-3. **配置API Key**（首次使用）
-   ```
-   /ws config
-   ```
-   - 输入你的AI API密钥（DeepSeek/OpenAI）
-   - 保存配置
+3. **启动独立 Harness**
+   - 安装 Node.js 24 与 pnpm
+   - 首次运行 `.\scripts\start-worldsoul-harness.ps1 -Install -Build`
 
 ### 基础使用
 
@@ -82,16 +78,13 @@
 在聊天框输入消息，使用以下前缀之一：
 
 ```
-WorldSoul, [消息]
-WS, [消息]
-世界之魂, [消息]
-@[WorldSoul] [消息]
+@AI [消息]
 ```
 
 **示例对话**：
 
 ```
-<Player> WorldSoul, 钻石怎么找？
+<Player> @AI 钻石怎么找？
 [WorldSoul] 啊，钻石是每个冒险者的目标！建议你深入到Y=-58左右，
           那里钻石最丰富。记得带上铁镐和水桶，安全第一！
 ```
@@ -149,22 +142,59 @@ WS, [消息]
 
 ## 🛠️ 技术架构
 
+仓库为 Gradle 多模块（详见 [docs/MODULES.md](docs/MODULES.md)、[docs/VERSIONING.md](docs/VERSIONING.md)）：
+
 ```
-WorldSoul Mod
-├── AI通信层 (DeepSeek/OpenAI)
-├── 对话管理层 (ConversationManager)
-├── 游戏操作层 (WorldController)
-├── 学习与记忆层 (Mod学习 + 记忆系统)
-├── 模式管理层 (三种模式切换)
-└── UI交互层 (配置界面 + HUD)
+WorldSoul/
+├── agent-core/    # Agent 大脑（无 MC）
+├── worldsoul-harness/ # 独立 WorldSoul Harness
+├── mod-common/    # mod↔harness HTTP（无 MC）
+├── mod-1.20.1/    # Fabric 1.20.1
+└── mod-1.20.4/    # Fabric 1.20.4
+```
+
+```
+Minecraft mod ──HTTP──► WorldSoul gateway ──► DeepSeek Harness Agent
 ```
 
 **技术栈**:
 - Fabric Loader 0.15+
-- Minecraft 1.20.4
-- Java 17+
+- Minecraft **1.20.1 / 1.20.4**（分版本 jar）
+- Java 17+（游戏运行推荐 21）
 - Gson (JSON处理)
 - Caffeine (缓存)
+
+**本地启动 Harness（无需启动游戏）**:
+
+```bash
+.\scripts\start-worldsoul-harness.ps1 -Install -Build
+
+# 浏览器打开 http://127.0.0.1:8787/worldsoul
+# 停止：在 Harness 终端按 Ctrl+C
+```
+
+监控页展示每个存档的全局 Agent 与在线玩家 Agent、token 用量和阈值，并支持直接修改阈值。
+
+**Mod ↔ Harness 连通**（需先启动 harness）：
+
+```bash
+# 终端 1（推荐 detached）
+.\scripts\start-worldsoul-harness.ps1
+
+# 终端 2（按你的游戏版本二选一）
+./gradlew :mod-1.20.1:runClient
+# 或
+./gradlew :mod-1.20.4:runClient
+```
+
+进入存档后自动创建 Agent；聊天栏输入 `@AI 你的问题` 即可对话。
+
+**安装用 jar：**
+
+| MC 版本 | 构建 | 产物 |
+|---------|------|------|
+| 1.20.1 | `./gradlew :mod-1.20.1:build` | `mod-1.20.1/build/release/worldsoul-1.20.1.jar` |
+| 1.20.4 | `./gradlew :mod-1.20.4:build` | `mod-1.20.4/build/release/worldsoul-1.20.4.jar` |
 
 ---
 
@@ -249,9 +279,10 @@ WorldSoul记录结果
 - 配置系统
 
 ### 🚧 Phase 2: 基础能力 (开发中)
-- 命令执行系统
-- 三种模式实现
-- 记忆管理系统
+- 受模组校验的命令执行闭环
+- 存档全局 Agent 与隔离玩家 Agent
+- 文字与按键语音输入
+- token 阈值监控与停用
 
 ### 📋 Phase 3: 高级能力 (计划中)
 - Mod方块学习
@@ -259,7 +290,6 @@ WorldSoul记录结果
 - 批量命令执行
 
 ### 🔮 Phase 4: 完整功能 (未来)
-- 语音输入系统
 - 地形修改
 - 性能优化
 

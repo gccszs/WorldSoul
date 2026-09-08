@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+base {
+    archivesName = 'worldsoul-agent-core'
+}
+
+dependencies {
+    api "com.google.code.gson:gson:${rootProject.property('gson_version')}"
+    implementation "com.github.ben-manes.caffeine:caffeine:${rootProject.property('caffeine_version')}"
+}
+
+jar {
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.name}" }
+    }
+}
