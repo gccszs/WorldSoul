@@ -63,8 +63,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: worldsoul-harness/pnpm-lock.yaml
       - name: Enable pnpm
         run: corepack enable
       - name: Install locked dependencies
